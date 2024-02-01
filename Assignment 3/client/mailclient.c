@@ -175,9 +175,9 @@ int main(int argc, char *argv[])
 
             if (strncmp(buf, "250", 3) != 0)
             {
-                printf("Error in connection\n");
+                printf("Error in sending mail: %s\n", buf);
                 close(client_socket);
-                exit(0);
+                continue;
             }
 
             printf("%s\n", buf);

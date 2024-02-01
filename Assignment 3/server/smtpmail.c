@@ -168,10 +168,45 @@ int main(int argc, char *argv[])
             char receiver[100];
             strcpy(receiver, buf + 9);
 
-            // send 250 OK
-            strcpy(msg, "250 root... Recipient OK\r\n");
+            // extract directory from sender by removing everything after @
+            char receivername[20];
+            char path[42];
+            for (int i = 0; i < strlen(receiver); i++)
+            {
+                if (receiver[i] == '@')
+                {
+                    receivername[i] = '\0';
+                    break;
+                }
+                receivername[i] = receiver[i];
+            }
 
-            send(new_sock, msg, strlen(msg), 0);
+            snprintf(path, sizeof(path), "%s/mailbox", receivername);
+
+            memset(msg, 0, sizeof(msg));
+
+            // check if their mailbox exists inside the subdir
+            // open mailbox
+            FILE *fp;
+
+            fp = fopen(path, "a");
+            if (fp == NULL)
+            {
+                // send 550 No such user
+                printf("No such user\nWaiting for new connection\n\n");
+                strcpy(msg, "550 No such user\r\n");
+                send(new_sock, msg, strlen(msg), 0);
+                // close(new_sock);
+                // exit(0);
+            }
+            else 
+            {
+                // send 250 OK
+                strcpy(msg, "250 root... Recipient OK\r\n");
+                send(new_sock, msg, strlen(msg), 0);
+            }
+
+            // fp will be used to write the mail to the user's mailbox later
 
             // recv DATA
             memset(buf, 0, sizeof(buf));
@@ -197,31 +232,6 @@ int main(int argc, char *argv[])
             send(new_sock, msg, strlen(msg), 0);
 
             // recv mail
-
-            // open mailbox
-            FILE *fp;
-            char path[42];
-
-            // extract directory from sender by removing everything after @
-            char receivername[20];
-            for (int i = 0; i < strlen(receiver); i++)
-            {
-                if (receiver[i] == '@')
-                {
-                    receivername[i] = '\0';
-                    break;
-                }
-                receivername[i] = receiver[i];
-            }
-
-            snprintf(path, sizeof(path), "%s/mailbox", receivername);
-
-            fp = fopen(path, "a");
-            if (fp == NULL)
-            {
-                perror("Error opening mailbox");
-                exit(EXIT_FAILURE);
-            }
 
             memset(buf, 0, sizeof(buf));
             while (1)
