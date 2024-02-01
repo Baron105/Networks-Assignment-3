@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <time.h>
 
-
 int main(int argc, char *argv[])
 {
 
@@ -29,10 +28,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // setting the server address
     int port;
-    // printf("Enter the port number: ");
-    // scanf("%d", &port);
 
     if (argc == 2)
     {
@@ -42,7 +38,7 @@ int main(int argc, char *argv[])
     else
     {
         printf("Usage: %s <smtp_port>\n", argv[0]);
-        exit(EXIT_FAILURE);
+        exit(0);
     }
 
     server_addr.sin_family = AF_INET;
@@ -65,7 +61,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("SMTP server ready and listening for connections\n");
+    printf("SMTP server ready and listening for connections\n\n");
 
     while (1)
     {
@@ -90,6 +86,7 @@ int main(int argc, char *argv[])
             close(server_socket);
 
             // connection established
+            // inet_ntoa converts the ip address to string
             char msg[2048] = "220 ";
             strcat(msg, inet_ntoa(server_addr.sin_addr));
             strcat(msg, " ..Service Ready\r\n");
@@ -145,7 +142,7 @@ int main(int argc, char *argv[])
             sender[strlen(sender) - 2] = '\0';
 
             // send 250 OK
-            strcpy(msg, "250");
+            strcpy(msg, "250 ");
             strcat(msg, sender);
             strcat(msg, " Sender OK\r\n");
 
@@ -230,7 +227,7 @@ int main(int argc, char *argv[])
             while (1)
             {
                 memset(buf, '\0', sizeof(buf));
-                while(1)
+                while (1)
                 {
                     // receive character by character till \r\n
                     char c[10];
@@ -244,8 +241,6 @@ int main(int argc, char *argv[])
                 }
                 // len = recv(new_sock, buf, sizeof(buf), 0);
                 printf("%s", buf);
-                // print first 3 characters 
-                // printf("%c %c %c %c\n", buf[0], buf[1], buf[2],buf[3]);
 
                 // store to user's mailbox
                 if (strncmp(buf, ".\r\n", 3) == 0)
@@ -253,7 +248,8 @@ int main(int argc, char *argv[])
                     write(fileno(fp), ".\r\n", 3);
                     break;
                 }
-                else write(fileno(fp), buf, strlen(buf));
+                else
+                    write(fileno(fp), buf, strlen(buf));
                 // write(fileno(fp), "\n", 1);
 
                 // add time to the message after subject is received
@@ -283,14 +279,12 @@ int main(int argc, char *argv[])
             printf("%s\n", buf);
 
             char ip_addr[20];
-            inet_ntop(AF_INET,(struct sockaddr_in *)&server_addr.sin_addr,ip_addr,16);
+            inet_ntop(AF_INET, (struct sockaddr_in *)&server_addr.sin_addr, ip_addr, 16);
 
-            // send 221 
+            // send 221
             strcpy(msg, "221 ");
             strcat(msg, ip_addr);
             strcat(msg, " closing connection\r\n");
-
-            
 
             send(new_sock, msg, strlen(msg), 0);
 
@@ -298,8 +292,6 @@ int main(int argc, char *argv[])
             printf("Connection closed\n");
             exit(0);
             memset(buf, 0, sizeof(buf));
-
-
         }
         close(new_sock);
     }
