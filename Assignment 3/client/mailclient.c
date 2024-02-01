@@ -9,23 +9,9 @@
 #include <fcntl.h>
 #include <signal.h>
 
-void set_nonblocking(int sockfd)
-{
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags == -1)
-    {
-        perror("fcntl");
-        exit(EXIT_FAILURE);
-    }
 
-    if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
-    {
-        perror("fcntl");
-        exit(EXIT_FAILURE);
-    }
-}
-
-char buf[2048];
+char buf[4096];
+char msg[256];
 
 int main(int argc, char *argv[])
 {
@@ -33,9 +19,6 @@ int main(int argc, char *argv[])
     int smtp_port;
     int pop3_port;
 
-    // printf("Enter the server ip: ");
-    // scanf("%s", server_ip);
-    // server_ip = "127.0.0.1";
 
     // 3 command line arguments server_ip, smtp_port, pop3_port
     if (argc != 4)
@@ -50,30 +33,23 @@ int main(int argc, char *argv[])
         pop3_port = atoi(argv[3]);
     }
 
-    // printf("Enter the pop3 port: ");
-    // scanf("%d", &pop3_port);
 
-    // char username[100];
-    // char password[100];
+    char username[100];
+    char password[100];
 
-    // printf("Enter the username: ");
-    // scanf("%s", username);
+    printf("Enter the username: ");
+    scanf("%s", username);
 
-    // printf("Enter the password: ");
-    // scanf("%s", password);
+    printf("Enter the password: ");
+    scanf("%s", password);
 
     int client_socket;
     struct sockaddr_in server_addr, client_addr;
 
-    
-
-    // binding the client (optional in this case)
-
-    
 
     while (1)
     {
-        printf("\n1.Manage mails\n2.Send mail\n3.Quit\n");
+        printf("\n1.Manage Mail\n2.Send Mail\n3.Quit\n");
 
         int choice;
         scanf("%d", &choice);
@@ -81,8 +57,7 @@ int main(int argc, char *argv[])
         if (choice == 3)
         {
             // send receiver that quit is requested
-
-            // also print the message response from server
+            printf("Quitting\n");
 
             // break any connection is open
             return 0;
@@ -90,6 +65,7 @@ int main(int argc, char *argv[])
 
         else if (choice == 1)
         {
+            // pop3 server part
         }
 
         else if (choice == 2)
@@ -111,7 +87,6 @@ int main(int argc, char *argv[])
                 perror("Unable to connect to server");
                 exit(0);
             }
-            printf("Connected to the server\n");
 
             // if the message is not 220 , then close the connection and exit
 
@@ -119,12 +94,7 @@ int main(int argc, char *argv[])
 
             int len;
 
-            while (1)
-            {
-                len = recv(client_socket, buf, sizeof(buf), 0);
-                if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
-                    break;
-            }
+            len = recv(client_socket, buf, sizeof(buf), 0);
 
             if (strncmp(buf, "220", 3) != 0)
             {
@@ -135,17 +105,17 @@ int main(int argc, char *argv[])
 
             printf("%s\n", buf);
 
-            char msg[2048] = "HELO <Domain_name>\r\n";
+            
+            memset(msg, 0, sizeof(msg));
+            strcat(msg, "HELO ");
+            strcat(msg, server_ip);
+            strcat(msg, "\r\n");
+
             send(client_socket, msg, strlen(msg), 0);
 
             // recv 250
             memset(buf, 0, sizeof(buf));
-            while (1)
-            {
-                len = recv(client_socket, buf, sizeof(buf), 0);
-                if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
-                    break;
-            }
+            len = recv(client_socket, buf, sizeof(buf), 0);
 
             if (strncmp(buf, "250", 3) != 0)
             {
@@ -172,12 +142,7 @@ int main(int argc, char *argv[])
 
             // recv 250
             memset(buf, 0, sizeof(buf));
-            while (1)
-            {
-                len = recv(client_socket, buf, sizeof(buf), 0);
-                if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
-                    break;
-            }
+            len = recv(client_socket, buf, sizeof(buf), 0);
             buf[len-2]='\0';
 
             if (strncmp(buf, "250", 3) != 0)
@@ -205,12 +170,7 @@ int main(int argc, char *argv[])
 
             // recv 250
             memset(buf, 0, sizeof(buf));
-            while (1)
-            {
-                len = recv(client_socket, buf, sizeof(buf), 0);
-                if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
-                    break;
-            }
+            len = recv(client_socket, buf, sizeof(buf), 0);
             buf[len-2]='\0';
 
             if (strncmp(buf, "250", 3) != 0)
@@ -230,12 +190,7 @@ int main(int argc, char *argv[])
 
             // recv 354
             memset(buf, 0, sizeof(buf));
-            while (1)
-            {
-                len = recv(client_socket, buf, sizeof(buf), 0);
-                if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
-                    break;
-            }
+            len = recv(client_socket, buf, sizeof(buf), 0);
 
             if (strncmp(buf, "354", 3) != 0)
             {
@@ -248,20 +203,105 @@ int main(int argc, char *argv[])
 
             printf("Enter the message:(strictly adhere to the mail format) \n");
 
-            // taking msg input from user line by line and sending
-            while (1)
+            // taking msg input from user line by line and checking format
+            memset(msg, 0, sizeof(msg));
+            memset(buf, 0, sizeof(buf));
+
+
+            char msgarr[50][80] = {0};
+            int msgarrlen = 0;
+
+            while(1)
             {
-                memset(msg, 0, sizeof(msg));
                 scanf("\n%[^\n]s", msg);
-                strcat(msg, "\r\n");
-                if (strncmp(msg, ".\r\n", 3) == 0)
+                if(strcmp(msg,".")==0)
                 {
-                    char *msg2 = "\r\n.\r\n";
-                    send(client_socket, msg2, strlen(msg2), 0);
+                    strcpy(msgarr[msgarrlen],"\r\n.\r\n");
+                    msgarrlen++;   
                     break;
                 }
-                send(client_socket, msg, strlen(msg), 0);
+                else
+                {
+                    strcpy(msgarr[msgarrlen],msg);
+                    strcat(msgarr[msgarrlen],"\r\n");
+                    msgarrlen++;
+                }
+
             }
+
+            //check line 0 for from and @
+            if(strncmp(msgarr[0],"From:",5)!=0)
+            {
+                printf("Error in format\n");
+                close(client_socket);
+                continue;
+            }
+            else
+            {
+                int i=5;
+                while(msgarr[0][i]!='\0')
+                {
+                    if(msgarr[0][i]=='@')
+                        break;
+                    i++;
+                }
+                if(msgarr[0][i]=='\0')
+                {
+                    printf("Error in format\n");
+                    close(client_socket);
+                    continue;;
+                }
+            }
+
+            //check line 1 for to and @
+            if(strncmp(msgarr[1],"To:",3)!=0)
+            {
+                printf("Error in format\n");
+                close(client_socket);
+                continue;
+            }
+            else
+            {
+                int i=3;
+                while(msgarr[1][i]!='\0')
+                {
+                    if(msgarr[1][i]=='@')
+                        break;
+                    i++;
+                }
+                if(msgarr[1][i]=='\0')
+                {
+                    printf("Error in format\n");
+                    close(client_socket);
+                    continue;
+                }
+            }
+
+            //check line 2 for subject
+            if(strncmp(msgarr[2],"Subject:",8)!=0)
+            {
+                printf("Error in format\n");
+                close(client_socket);
+                continue;
+            }
+
+            // check last line for \r\n.\r\n
+            if(strncmp(msgarr[msgarrlen-1],"\r\n.\r\n",5)!=0)
+            {
+                printf("Error in format\n");
+                close(client_socket);
+                continue;
+            }
+            
+            // send the message from msgarr
+            for(int i=0;i<msgarrlen;i++)
+            {
+                send(client_socket,msgarr[i],strlen(msgarr[i]),0);
+                printf("%s\n",msgarr[i]);
+            }
+
+
+
 
             // recv 250
             memset(buf, 0, sizeof(buf));
@@ -273,6 +313,25 @@ int main(int argc, char *argv[])
             }
 
             if (strncmp(buf, "250", 3) != 0)
+            {
+                printf("Error in connection\n");
+                close(client_socket);
+                exit(0);
+            }
+
+            printf("%s\n", buf);
+
+            // send QUIT
+            memset(msg, 0, sizeof(msg));
+            strcpy(msg, "QUIT\r\n");
+
+            send(client_socket, msg, strlen(msg), 0);
+
+            // recv 221
+            memset(buf, 0, sizeof(buf));
+            len = recv(client_socket, buf, sizeof(buf), 0);
+
+            if (strncmp(buf, "221", 3) != 0)
             {
                 printf("Error in connection\n");
                 close(client_socket);

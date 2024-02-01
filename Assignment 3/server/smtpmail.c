@@ -10,22 +10,6 @@
 #include <fcntl.h>
 #include <time.h>
 
-// set the socket to non-blocking
-// void set_nonblocking(int *sockfd)
-// {
-//     int flags = fcntl(*sockfd, F_GETFL, 0);
-//     if (flags == -1)
-//     {
-//         perror("fcntl");
-//         exit(EXIT_FAILURE);
-//     }
-
-//     if (fcntl(*sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
-//     {
-//         perror("fcntl");
-//         exit(EXIT_FAILURE);
-//     }
-// }
 
 int main(int argc, char *argv[])
 {
@@ -106,7 +90,9 @@ int main(int argc, char *argv[])
             close(server_socket);
 
             // connection established
-            char msg[2048] = "220 <Domain_name> Service ready\r\n";
+            char msg[2048] = "220 ";
+            strcat(msg, inet_ntoa(server_addr.sin_addr));
+            strcat(msg, " ..Service Ready\r\n");
 
             send(new_sock, msg, strlen(msg), 0);
 
@@ -160,7 +146,7 @@ int main(int argc, char *argv[])
 
             // send 250 OK
             strcpy(msg, "250");
-            strcat(msg, buf + 10);
+            strcat(msg, sender);
             strcat(msg, " Sender OK\r\n");
 
             send(new_sock, msg, strlen(msg), 0);
@@ -243,23 +229,32 @@ int main(int argc, char *argv[])
             memset(buf, 0, sizeof(buf));
             while (1)
             {
-                while (1)
+                memset(buf, '\0', sizeof(buf));
+                while(1)
                 {
-                    memset(buf, 0, sizeof(buf));
-                    len = recv(new_sock, buf, sizeof(buf), 0);
-                    if (buf[len - 1] == '\n' && buf[len - 2] == '\r')
+                    // receive character by character till \r\n
+                    char c[10];
+                    recv(new_sock, c, 1, 0);
+                    c[1] = '\0';
+                    // printf("%s", c);
+
+                    strcat(buf, c);
+                    if (c[0] == '\n')
                         break;
                 }
-                buf[len - 2] = '\0';
-                printf("%s\n", buf);
+                // len = recv(new_sock, buf, sizeof(buf), 0);
+                printf("%s", buf);
+                // print first 3 characters 
+                // printf("%c %c %c %c\n", buf[0], buf[1], buf[2],buf[3]);
 
                 // store to user's mailbox
-                if (strncmp(buf, "\r\n", 2) == 0)
+                if (strncmp(buf, ".\r\n", 3) == 0)
                 {
-                    write(fileno(fp), ".", 1);
+                    write(fileno(fp), ".\r\n", 3);
+                    break;
                 }
                 else write(fileno(fp), buf, strlen(buf));
-                write(fileno(fp), "\n", 1);
+                // write(fileno(fp), "\n", 1);
 
                 // add time to the message after subject is received
                 if (strncmp(buf, "Subject", 7) == 0)
@@ -274,11 +269,6 @@ int main(int argc, char *argv[])
                     write(fileno(fp), time, strlen(time));
                     write(fileno(fp), "\n", 1);
                 }
-
-                if (strncmp(buf, "\r\n", 2) == 0)
-                {
-                    break;
-                }
             }
             printf("\n\n");
 
@@ -287,9 +277,29 @@ int main(int argc, char *argv[])
 
             send(new_sock, msg, strlen(msg), 0);
 
+            // recv QUIT msg
+            memset(buf, 0, sizeof(buf));
+            len = recv(new_sock, buf, sizeof(buf), 0);
+            printf("%s\n", buf);
+
+            char ip_addr[20];
+            inet_ntop(AF_INET,(struct sockaddr_in *)&server_addr.sin_addr,ip_addr,16);
+
+            // send 221 
+            strcpy(msg, "221 ");
+            strcat(msg, ip_addr);
+            strcat(msg, " closing connection\r\n");
+
+            
+
+            send(new_sock, msg, strlen(msg), 0);
+
             close(new_sock);
             printf("Connection closed\n");
             exit(0);
+            memset(buf, 0, sizeof(buf));
+
+
         }
         close(new_sock);
     }
