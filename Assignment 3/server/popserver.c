@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
-            printf("%s", buf);
+            printf("%s\n", buf);
 
             // now extract the password
 
