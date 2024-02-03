@@ -68,7 +68,86 @@ int main(int argc, char *argv[])
         {
             // pop3 server part
 
-            // will be implemented later
+            if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+            {
+                perror("Unable to create socket\n");
+                exit(0);
+            }
+
+            // server info
+            server_addr.sin_family = AF_INET;
+            inet_aton(server_ip, &server_addr.sin_addr);
+            server_addr.sin_port = htons(pop3_port);
+            // connect to the server
+            if ((connect(client_socket, (struct sockaddr *)&server_addr, sizeof(server_addr))) < 0)
+            {
+                perror("Unable to connect to server");
+                exit(0);
+            }
+
+            // receive ready from server
+            // if the message is not +OK , then close the connection and exit
+            memset(buf, 0, sizeof(buf));
+            int len;
+
+            len = recv(client_socket, buf, sizeof(buf), 0);
+
+            if (strncmp(buf, "+OK", 3) != 0)
+            {
+                printf("Error in connection\n");
+                close(client_socket);
+                exit(0);
+            }
+
+            printf("%s\n", buf);
+
+            // send USER name
+            memset(msg, 0, sizeof(msg));
+            strcpy(msg, "USER ");
+            strcat(msg, username);
+            strcat(msg, "\r\n");
+
+            printf("%s %d\n", msg, strlen(msg));
+            send(client_socket, msg, strlen(msg), 0);
+
+            // check if the user is valid
+            memset(buf, 0, sizeof(buf));
+            len = recv(client_socket, buf, sizeof(buf), 0);
+            buf[len - 2] = '\0';
+
+            if (strncmp(buf, "+OK", 3) != 0)
+            {
+                printf("No such user\n%s\n", buf);
+                close(client_socket);
+                exit(0);
+            }
+
+            printf("%s\n", buf);
+
+            // send PASS password
+            memset(msg, 0, sizeof(msg));
+            strcpy(msg, "PASS ");
+            strcat(msg, password);
+            strcat(msg, "\r\n");
+
+            send(client_socket, msg, strlen(msg), 0);
+
+            // check if the password is valid
+            memset(buf, 0, sizeof(buf));
+            len = recv(client_socket, buf, sizeof(buf), 0);
+            buf[len - 2] = '\0';
+
+            if (strncmp(buf, "+OK", 3) != 0)
+            {
+                printf("Error in authentication\n%s\n", buf);
+                close(client_socket);
+                exit(0);
+            }
+
+            printf("%s\n", buf);
+
+
+
         }
 
         else if (choice == 2)
