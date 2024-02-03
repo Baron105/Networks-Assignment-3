@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
             strcat(msg, username);
             strcat(msg, "\r\n");
 
-            printf("%s %d\n", msg, strlen(msg));
             send(client_socket, msg, strlen(msg), 0);
 
             // check if the user is valid

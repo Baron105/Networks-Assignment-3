@@ -87,12 +87,14 @@ int main(int argc, char *argv[])
             char *welcome = "+OK POP3 server ready\r\n";
             send(new_sock, welcome, strlen(welcome), 0);
 
+            memset(buf, 0, sizeof(buf));
+
             // receive the username
             recv(new_sock, buf, sizeof(buf), 0);
             printf("%s", buf);
 
             // remove the USER and \r\n from the username
-            buf[strlen(buf) - 3] = '\0';
+            buf[strlen(buf) - 2] = '\0';
 
             // check first 4 characters
             if (strncmp(buf, "USER", 4) != 0)
@@ -114,7 +116,6 @@ int main(int argc, char *argv[])
 
             char uname[100];
             strcpy(uname, buf + i);
-            printf("Username: %s\n", uname);
             
             // check if username is valid from the file user.txt
             FILE *file = fopen("user.txt", "r");
@@ -124,8 +125,7 @@ int main(int argc, char *argv[])
 
             while (fscanf(file, "%s %s", username, password) != EOF)
             {
-                printf("Username: %s\tPassword: %s\n", username, password);
-                if (strcmp(uname, username) == 0)
+                if (strncmp(username, uname, strlen(username)) == 0)
                 {
                     valid = 1;
                     break;
@@ -147,10 +147,12 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
+            memset(buf, 0, sizeof(buf));
+
             // now receive the password
             // as we have already received the username and the corresponding password is in the file user.txt
             recv(new_sock, buf, sizeof(buf), 0);
-            buf[strlen(buf) - 3] = '\0';
+            buf[strlen(buf) - 2] = '\0';
 
             // check first 4 characters
             if (strncmp(buf, "PASS", 4) != 0)
@@ -160,6 +162,8 @@ int main(int argc, char *argv[])
                 close(new_sock);
                 exit(0);
             }
+
+            printf("%s", buf);
 
             // now extract the password
 
@@ -172,7 +176,6 @@ int main(int argc, char *argv[])
 
             char pass[100];
             strcpy(pass, buf + i);
-            printf("Password: %s\n", pass);
 
 
 
@@ -219,10 +222,7 @@ int main(int argc, char *argv[])
                                 {
                                     c = fgetc(mailbox);
                                     chars++;
-                                    if (c == '\n')
-                                    {
-                                        emails++;
-                                    }
+                                    emails++;
                                 }
                             }
                         }
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
             
 
-
+            // unlock file 
 
             close(new_sock);
             printf("Connection closed\n");
