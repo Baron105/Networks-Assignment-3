@@ -201,34 +201,18 @@ int main(int argc, char *argv[])
 
                 // count the number of emails by tracking \r\n.\r\n
                 int emails = 0;
-                int chars = 0;
-                char c;
-                while ((c = fgetc(mailbox)) != EOF)
+                int chars = 0;  
+                char blah[100];
+                while(fgets(blah, sizeof(blah), mailbox))
                 {
-                    chars++;
-                    if (c == '\r')
+                    if(strncmp(blah, ".\r\n", 2) == 0)
                     {
-                        c = fgetc(mailbox);
-                        chars++;
-                        if (c == '\n')
-                        {
-                            c = fgetc(mailbox);
-                            chars++;
-                            if (c == '.')
-                            {
-                                c = fgetc(mailbox);
-                                chars++;
-                                if (c == '\r')
-                                {
-                                    c = fgetc(mailbox);
-                                    chars++;
-                                    emails++;
-                                }
-                            }
-                        }
+                        emails++;
                     }
+                    chars += strlen(blah);
                 }
                 int octets = chars/8;
+                fclose(mailbox);
 
                 char msg[100];
                 snprintf(msg, sizeof(msg), "+OK %s's maildrop has %d messages (%d octets)\r\n", username, emails, octets);
