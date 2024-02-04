@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
             printf("%s\n", buf);
 
-            while(1)
+            while (1)
             {
                 // send LIST
                 memset(msg, 0, sizeof(msg));
@@ -156,33 +156,33 @@ int main(int argc, char *argv[])
                 // receive the list of mails character by character
                 printf("List of mails:\n");
                 printf("Sl.No\tFrom\tReceived at\tSubject\n");
-                while(1)
+                while (1)
                 {
                     // keep receiving the list of mails till \r\n#
                     memset(buf, 0, sizeof(buf));
                     len = recv(client_socket, buf, sizeof(buf), 0);
 
-                    if(buf[len-1]=='#')
+                    if (buf[len - 1] == '#')
                     {
-                        buf[len-1]='\0';
-                        printf("%s\n",buf);
+                        buf[len - 1] = '\0';
+                        printf("%s\n", buf);
                         break;
                     }
                     else
                     {
-                        printf("%s",buf);
+                        printf("%s", buf);
                     }
                 }
                 int flag = 0;
                 int flag2 = 0;
-                while(1)
+                while (1)
                 {
                     // ask user to enter the mail number he wishes to see
                     int mailno;
                     printf("Enter the mail number you wish to see:(-1 to exit) ");
-                    scanf("%d",&mailno);
+                    scanf("%d", &mailno);
 
-                    if(mailno==-1)
+                    if (mailno == -1)
                     {
                         flag = 1;
                         break;
@@ -190,41 +190,37 @@ int main(int argc, char *argv[])
 
                     // check if mailno is valid by sending RETR to the server
                     memset(msg, 0, sizeof(msg));
-                    sprintf(msg,"RETR %d\r\n",mailno);
+                    sprintf(msg, "RETR %d\r\n", mailno);
                     send(client_socket, msg, strlen(msg), 0);
 
                     // receive the mail
                     flag2 = 0;
-                    while(1)
+                    while (1)
                     {
                         memset(buf, 0, sizeof(buf));
                         len = recv(client_socket, buf, sizeof(buf), 0);
-                        if(strncmp(buf,"-ERR",4)==0)
+                        if (strncmp(buf, "-ERR", 4) == 0)
                         {
                             printf("Error in mail number\n");
                             break;
                         }
-                        if(buf[len-1]=='#')
+                        if (buf[len - 1] == '#')
                         {
-                            buf[len-1]='\0';
-                            printf("%s\n",buf);
+                            buf[len - 1] = '\0';
+                            printf("%s\n", buf);
                             flag2 = 1;
                             break;
                         }
                         else
                         {
-                            printf("%s",buf);
+                            printf("%s", buf);
                         }
                     }
-                    if(flag2==1)
+                    if (flag2 == 1)
                         break;
                 }
-                if(flag==1)
+                if (flag == 1)
                     break;
-                
-                
-                
-
             }
 
             // close the connection
