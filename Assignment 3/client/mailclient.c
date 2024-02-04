@@ -226,6 +226,10 @@ int main(int argc, char *argv[])
                 
 
             }
+
+            // close the connection
+            close(client_socket);
+            printf("Connection closed\n");
         }
 
         else if (choice == 2)
