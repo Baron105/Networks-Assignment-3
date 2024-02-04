@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
-
             // check
 
             printf("%s\n", buf);
@@ -189,7 +188,6 @@ int main(int argc, char *argv[])
             snprintf(path, sizeof(path), "%s/mailbox", receivername);
 
             memset(msg, 0, sizeof(msg));
-
 
             // open mailbox
             FILE *fp;
@@ -215,7 +213,7 @@ int main(int argc, char *argv[])
                     exit(0);
                 }
             }
-            else 
+            else
             {
                 // send 250 OK
                 strcpy(msg, "250 root... Recipient OK\r\n");
