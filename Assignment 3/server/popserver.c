@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
 
             char pass[100];
             strcpy(pass, buf + i);
+            FILE *mailbox;
 
             if (strcmp(pass, password) == 0)
             {
@@ -186,7 +187,7 @@ int main(int argc, char *argv[])
                 char mailboxpath[100];
 
                 snprintf(mailboxpath, sizeof(mailboxpath), "%s/mailbox", username);
-                FILE *mailbox = fopen(mailboxpath, "r");
+                mailbox = fopen(mailboxpath, "r");
 
                 // lock the mailbox
                 if (flock(fileno(mailbox), LOCK_EX | LOCK_NB) == -1)
@@ -209,7 +210,6 @@ int main(int argc, char *argv[])
                     chars += strlen(blah);
                 }
                 int octets = chars / 8;
-                fclose(mailbox);
 
                 char msg[100];
                 snprintf(msg, sizeof(msg), "+OK %s's maildrop has %d messages (%d octets)\r\n", username, emails, octets);
@@ -223,9 +223,129 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
+            
+            int s;
             // now send the list of emails
+            while(1)
+            {
+                // recv command
+                memset(buf, 0, sizeof(buf));
+                recv(new_sock, buf, sizeof(buf), 0);
+                printf("%s", buf);
+
+                if(strncmp(buf,"LIST",4)==0)
+                {
+                    //extract the mails in the format 
+                    fseek(mailbox, 0, SEEK_SET);
+                    s = 0;
+                    char semail[100];
+                    char rdatetime[100];
+                    char subject[100];
+                    int sc = 0, rc = 0, subc = 0;
+                    while(fgets(buf, sizeof(buf), mailbox))
+                    {
+                        if(strncmp(buf, ".\r\n", 3) == 0)
+                        {
+                            s++;
+                            sc = 0; rc = 0; subc = 0;
+                            // send all data together
+                            char msg[400];
+                            snprintf(msg, sizeof(msg), "%d\t%s\t%s\t%s\r\n", s, semail, rdatetime, subject);
+                            // printf("%s", msg);
+                            send(new_sock, msg, strlen(msg), 0);
+                        }
+
+                        if(strncmp(buf, "From: ", 6) == 0 && sc == 0)
+                        {
+                            buf[strlen(buf) - 2] = '\0';
+                            strcpy(semail, buf + 6);
+                            sc = 1;
+                        }
+
+                        if(strncmp(buf, "Received: ", 10) == 0 && rc == 0)
+                        {
+                            buf[strlen(buf) - 2] = '\0';
+                            strcpy(rdatetime, buf + 10);
+                            rc = 1;
+                        }
+
+                        if(strncmp(buf, "Subject: ", 9) == 0 && subc == 0)
+                        {
+                            buf[strlen(buf) - 2] = '\0';
+                            strcpy(subject, buf + 9);
+                            subc = 1;
+                        }
+                        
+                        memset(buf, 0, sizeof(buf));
+                    }
+                    memset(buf, 0, sizeof(buf));
+                    strcpy(buf, "#");
+                    send(new_sock, buf, strlen(buf), 0);
+                }
+                else if(strncmp(buf,"RETR",4)==0)
+                {
+                    // extract the mail number
+                    int mailno;
+                    while(1)
+                    {
+                        sscanf(buf, "RETR %d", &mailno);
+
+                        // check the range of the mail 
+                        if(mailno > s || mailno < 1)
+                        {
+                            char *invalid_msg = "-ERR Invalid mail number or no mails are there\r\n";
+                            send(new_sock, invalid_msg, strlen(invalid_msg), 0);
+                            continue;
+                        }
+                        else break;
+                    }
+
+                    // send ok along with the mail 
+                    char msg[100];
+                    // find the mail in the mailbox
+                    fseek(mailbox, 0, SEEK_SET);
+                    int c = 1;
+                    int sz = 0;
+                    char mail[4096];
+                    // memset(mail, 0, sizeof(mail));
+                    while(fgets(buf, sizeof(buf), mailbox))
+                    {
+                        if(c == mailno)
+                        {
+                            sz+=strlen(buf);
+                            strcat(mail, buf);
+
+                        }
+                        if(strncmp(buf, ".\r\n", 3) == 0)
+                        {
+                            c++;
+                        }
+                    }
+                    sz=sz/8;
+                    snprintf(msg, sizeof(msg), "+OK %d octets\r\n", sz);
+                    send(new_sock, msg, strlen(msg), 0);
+                    printf("%s %s", msg,mail);
+
+                    send(new_sock, mail, strlen(mail), 0);
+                    memset(mail, 0, sizeof(mail));
+                    memset(buf, 0, sizeof(buf));
+                    strcpy(buf, "#");
+                    send(new_sock, buf, strlen(buf), 0);
+
+
+                    
+                }
+
+
+            }
 
             // unlock file
+            if (flock(fileno(mailbox), LOCK_UN) == -1)
+            {
+                perror("Error in unlocking the mailbox\n");
+                close(new_sock);
+                exit(1);
+            }
 
             close(new_sock);
             printf("Connection closed\n");

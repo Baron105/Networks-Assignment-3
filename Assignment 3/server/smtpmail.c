@@ -9,6 +9,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <time.h>
+#include <errno.h>
+#include <sys/errno.h>
 
 int main(int argc, char *argv[])
 {
@@ -164,6 +166,9 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
+
+            // check
+
             printf("%s\n", buf);
             char receiver[100];
             strcpy(receiver, buf + 9);
@@ -185,19 +190,30 @@ int main(int argc, char *argv[])
 
             memset(msg, 0, sizeof(msg));
 
-            // check if their mailbox exists inside the subdir
+
             // open mailbox
             FILE *fp;
 
             fp = fopen(path, "a");
             if (fp == NULL)
             {
-                // send 550 No such user
-                printf("No such user\nWaiting for new connection\n\n");
-                strcpy(msg, "550 No such user\r\n");
-                send(new_sock, msg, strlen(msg), 0);
-                // close(new_sock);
-                // exit(0);
+                // check if file is locked
+                if (errno == EACCES)
+                {
+                    printf("Mailbox is locked\nTry again later\n\n");
+                    strcpy(msg, "550 Requested action not taken: mailbox unavailable\r\n");
+                    send(new_sock, msg, strlen(msg), 0);
+                    close(new_sock);
+                    exit(0);
+                }
+                else
+                {
+                    printf("Mailbox does not exist\nWaiting for new connection\n\n");
+                    strcpy(msg, "550 Mailbox does not exist\r\n");
+                    send(new_sock, msg, strlen(msg), 0);
+                    close(new_sock);
+                    exit(0);
+                }
             }
             else 
             {
@@ -273,7 +289,7 @@ int main(int argc, char *argv[])
 
                     write(fileno(fp), "Received: ", 10);
                     write(fileno(fp), time, strlen(time));
-                    write(fileno(fp), "\n", 1);
+                    write(fileno(fp), "\r\n", 2);
                 }
             }
             printf("\n\n");
