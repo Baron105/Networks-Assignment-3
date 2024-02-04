@@ -252,7 +252,9 @@ int main(int argc, char *argv[])
                             subc = 0;
                             // send all data together
                             char msg[400];
-                            snprintf(msg, sizeof(msg), "%d\t%s\t%s\t%s\r\n", s, semail, rdatetime, subject);
+                            // snprintf(msg, sizeof(msg), "%d\t%s\t%s\t%s\r\n", s, semail, rdatetime, subject);
+                            snprintf(msg, sizeof(msg), "%-5d\t%-25s\t%-30s\t%-25s\r\n", s, semail, rdatetime, subject);
+
                             // printf("%s", msg);
                             send(new_sock, msg, strlen(msg), 0);
                         }
