@@ -155,7 +155,8 @@ int main(int argc, char *argv[])
 
                 // receive the list of mails character by character
                 printf("List of mails:\n");
-                printf("Sl.No\tFrom\tReceived at\tSubject\n");
+                printf("%-5s\t%-25s\t%-30s\t%-25s\n", "Sl.No", "From", "Received at", "Subject");
+
                 while (1)
                 {
                     // keep receiving the list of mails till \r\n#
