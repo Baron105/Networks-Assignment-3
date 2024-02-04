@@ -339,6 +339,16 @@ int main(int argc, char *argv[])
                     strcpy(buf, "#");
                     send(new_sock, buf, strlen(buf), 0);
                 }
+
+                else if(strncmp(buf,"QUIT",4)==0)
+                {
+                    char *quit_msg = "+OK POP3 server signing off\r\n";
+                    send(new_sock, quit_msg, strlen(quit_msg), 0);
+                    break;
+                }
+
+
+
             }
 
             // unlock file
@@ -348,6 +358,9 @@ int main(int argc, char *argv[])
                 close(new_sock);
                 exit(1);
             }
+
+            // close the mailbox
+            fclose(mailbox);
 
             close(new_sock);
             printf("Connection closed\n");

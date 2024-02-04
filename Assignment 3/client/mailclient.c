@@ -219,6 +219,31 @@ int main(int argc, char *argv[])
                     if (flag2 == 1)
                         break;
                 }
+                if(flag==1)
+                {
+                    // send QUIT
+                    memset(msg, 0, sizeof(msg));
+                    strcpy(msg, "QUIT\r\n");
+
+                    send(client_socket, msg, strlen(msg), 0);
+
+                    // recv OK
+                    memset(buf, 0, sizeof(buf));
+                    len = recv(client_socket, buf, sizeof(buf), 0);
+                    buf[len-2]='\0';
+
+                    if (strncmp(buf, "+OK", 3) != 0)
+                    {
+                        printf("Error msg\n");
+                        close(client_socket);
+                        exit(0);
+                    }
+
+                    printf("%s\n", buf);
+
+                    break;
+                }
+                
                 if (flag == 1)
                     break;
             }
