@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                     }
                 }
                 int flag = 0;
-
+                int flag2 = 0;
                 while(1)
                 {
                     // ask user to enter the mail number he wishes to see
@@ -193,8 +193,8 @@ int main(int argc, char *argv[])
                     sprintf(msg,"RETR %d\r\n",mailno);
                     send(client_socket, msg, strlen(msg), 0);
 
-                    int flag2 = 0;
                     // receive the mail
+                    flag2 = 0;
                     while(1)
                     {
                         memset(buf, 0, sizeof(buf));

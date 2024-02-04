@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
                 mailbox = fopen(mailboxpath, "r");
 
                 // lock the mailbox
-                if (flock(fileno(mailbox), LOCK_EX | LOCK_NB) == -1)
+                if (flock(fileno(mailbox), LOCK_EX|LOCK_NB ) == -1)
                 {
                     perror("Error in locking the mailbox\n");
                     close(new_sock);
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
                 close(new_sock);
                 exit(0);
             }
-
+            int len ;
             
             int s;
             // now send the list of emails
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
             {
                 // recv command
                 memset(buf, 0, sizeof(buf));
-                recv(new_sock, buf, sizeof(buf), 0);
+                len = recv(new_sock, buf, sizeof(buf), 0);
                 printf("%s", buf);
 
                 if(strncmp(buf,"LIST",4)==0)
@@ -286,19 +286,22 @@ int main(int argc, char *argv[])
                 {
                     // extract the mail number
                     int mailno;
+                    int flag = 0;
                     while(1)
                     {
-                        sscanf(buf, "RETR %d", &mailno);
+                        sscanf(buf, "RETR %d\r\n", &mailno);
 
                         // check the range of the mail 
                         if(mailno > s || mailno < 1)
                         {
                             char *invalid_msg = "-ERR Invalid mail number or no mails are there\r\n";
                             send(new_sock, invalid_msg, strlen(invalid_msg), 0);
-                            continue;
+                            flag = 1;
+                            break;
                         }
                         else break;
                     }
+                    if(flag) continue;
 
                     // send ok along with the mail 
                     char msg[100];
