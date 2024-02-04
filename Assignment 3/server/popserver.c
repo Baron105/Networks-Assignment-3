@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     printf("POP3 server is listening on port %d\n", port);
 
-    while(1)
+    while (1)
     {
         // accept the connection
         new_sock = accept(server_socket, (struct sockaddr *)&client_addr, &sin_len);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
             }
 
             // now extract the username
-            
+
             // go to first non space character
             int i = 4;
             while (buf[i] == ' ')
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
             char uname[100];
             strcpy(uname, buf + i);
-            
+
             // check if username is valid from the file user.txt
             FILE *file = fopen("user.txt", "r");
             char username[100];
@@ -177,9 +177,6 @@ int main(int argc, char *argv[])
             char pass[100];
             strcpy(pass, buf + i);
 
-
-
-
             if (strcmp(pass, password) == 0)
             {
                 // go to mailbox and check for emails and octets
@@ -192,7 +189,7 @@ int main(int argc, char *argv[])
                 FILE *mailbox = fopen(mailboxpath, "r");
 
                 // lock the mailbox
-                if (flock(fileno(mailbox), LOCK_EX|LOCK_NB) == -1)
+                if (flock(fileno(mailbox), LOCK_EX | LOCK_NB) == -1)
                 {
                     perror("Error in locking the mailbox\n");
                     close(new_sock);
@@ -201,25 +198,22 @@ int main(int argc, char *argv[])
 
                 // count the number of emails by tracking \r\n.\r\n
                 int emails = 0;
-                int chars = 0;  
+                int chars = 0;
                 char blah[100];
-                while(fgets(blah, sizeof(blah), mailbox))
+                while (fgets(blah, sizeof(blah), mailbox))
                 {
-                    if(strncmp(blah, ".\r\n", 2) == 0)
+                    if (strncmp(blah, ".\r\n", 2) == 0)
                     {
                         emails++;
                     }
                     chars += strlen(blah);
                 }
-                int octets = chars/8;
+                int octets = chars / 8;
                 fclose(mailbox);
 
                 char msg[100];
                 snprintf(msg, sizeof(msg), "+OK %s's maildrop has %d messages (%d octets)\r\n", username, emails, octets);
                 send(new_sock, msg, strlen(msg), 0);
-
-
-
             }
             else
             {
@@ -231,9 +225,7 @@ int main(int argc, char *argv[])
 
             // now send the list of emails
 
-            
-
-            // unlock file 
+            // unlock file
 
             close(new_sock);
             printf("Connection closed\n");
