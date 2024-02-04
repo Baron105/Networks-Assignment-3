@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
                             c++;
                         }
                     }
-                    sz=sz/8;
+                    sz/=8;
                     snprintf(msg, sizeof(msg), "+OK %d octets\r\n", sz);
                     send(new_sock, msg, strlen(msg), 0);
                     printf("%s %s", msg,mail);
