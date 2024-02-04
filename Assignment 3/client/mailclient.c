@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
             {
                 // send LIST
                 memset(msg, 0, sizeof(msg));
-                memset(buf, 0, sizeof(buf));
+                // memset(buf, 0, sizeof(buf));
                 strcpy(msg, "LIST\r\n");
                 send(client_socket, msg, strlen(msg), 0);
 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
                     memset(buf, 0, sizeof(buf));
                     len = recv(client_socket, buf, sizeof(buf), 0);
 
-                    if(buf[len-1]=='#' && buf[len-2]=='\n' && buf[len-3]=='\r')
+                    if(buf[len-1]=='#')
                     {
                         buf[len-1]='\0';
                         printf("%s\n",buf);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
                             printf("Error in mail number\n");
                             break;
                         }
-                        if(buf[len-1]=='#' && buf[len-2]=='\n' && buf[len-3]=='\r')
+                        if(buf[len-1]=='#')
                         {
                             buf[len-1]='\0';
                             printf("%s\n",buf);
@@ -221,8 +221,6 @@ int main(int argc, char *argv[])
                 }
                 if(flag==1)
                     break;
-
-                // recevive the mail
                 
                 
                 

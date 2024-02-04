@@ -302,12 +302,13 @@ int main(int argc, char *argv[])
 
                     // send ok along with the mail 
                     char msg[100];
+                    memset(msg, 0, sizeof(msg));
                     // find the mail in the mailbox
                     fseek(mailbox, 0, SEEK_SET);
                     int c = 1;
                     int sz = 0;
                     char mail[4096];
-                    // memset(mail, 0, sizeof(mail));
+                    memset(mail, 0, sizeof(mail));
                     while(fgets(buf, sizeof(buf), mailbox))
                     {
                         if(c == mailno)
