@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
                 // char *valid_msg = "+OK";
 
                 // open the mailbox file
-                char mailboxpath[100];
+                char mailboxpath[200];
 
                 snprintf(mailboxpath, sizeof(mailboxpath), "%s/mailbox", username);
                 mailbox = fopen(mailboxpath, "r");
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
                 }
                 int octets = chars / 8;
 
-                char msg[100];
+                char msg[200];
                 snprintf(msg, sizeof(msg), "+OK %s's maildrop has %d messages (%d octets)\r\n", username, emails, octets);
                 send(new_sock, msg, strlen(msg), 0);
             }
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
                     if(flag) continue;
 
                     // send ok along with the mail 
-                    char msg[100];
+                    char msg[200];
                     memset(msg, 0, sizeof(msg));
                     // find the mail in the mailbox
                     fseek(mailbox, 0, SEEK_SET);
