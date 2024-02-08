@@ -414,7 +414,12 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
+            buf[len - 2] = '\0';
+            strcat(buf, inet_ntoa(server_addr.sin_addr));
+            strcat(buf, "... Service ready\r\n");
+
             printf("%s\n", buf);
+            printf("%s\n",inet_ntoa(server_addr.sin_addr));
 
             // send HELO
             memset(msg, 0, sizeof(msg));
@@ -485,7 +490,7 @@ int main(int argc, char *argv[])
 
             if (strncmp(buf, "250", 3) != 0)
             {
-                printf("Error in sending mail: %s\n", buf);
+                printf("%s\n", buf);
                 close(client_socket);
                 continue;
             }
@@ -610,7 +615,6 @@ int main(int argc, char *argv[])
             for (int i = 0; i < msgarrlen; i++)
             {
                 send(client_socket, msgarr[i], strlen(msgarr[i]), 0);
-                printf("%s\n", msgarr[i]);
             }
 
             // recv 250
@@ -647,6 +651,10 @@ int main(int argc, char *argv[])
                 close(client_socket);
                 exit(0);
             }
+
+            buf[len - 2] = '\0';
+            strcat(buf, inet_ntoa(server_addr.sin_addr));
+            strcat(buf, "closing connection\r\n");
 
             printf("%s\n", buf);
 

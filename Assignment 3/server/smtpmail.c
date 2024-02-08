@@ -89,9 +89,8 @@ int main(int argc, char *argv[])
 
             // connection established
             // inet_ntoa converts the ip address to string
-            char msg[2048] = "220 ";
-            strcat(msg, inet_ntoa(server_addr.sin_addr));
-            strcat(msg, " ..Service Ready\r\n");
+            char msg[2048] = "220 \r\n";
+
 
             send(new_sock, msg, strlen(msg), 0);
 
@@ -310,13 +309,9 @@ int main(int argc, char *argv[])
             len = recv(new_sock, buf, sizeof(buf), 0);
             printf("%s\n", buf);
 
-            char ip_addr[20];
-            inet_ntop(AF_INET, (struct sockaddr_in *)&server_addr.sin_addr, ip_addr, 16);
 
             // send 221
-            strcpy(msg, "221 ");
-            strcat(msg, ip_addr);
-            strcat(msg, " closing connection\r\n");
+            strcpy(msg, "221 \r\n");
 
             fclose(fp);
 
