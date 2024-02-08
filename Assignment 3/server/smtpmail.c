@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             m = 0;
             n=0;
             while(buf[m]!='<')m++;
-            while(buf[m]!='>'){receiver[n++] = buf[m++];}
+            while(buf[m]!='@'){receiver[n++] = buf[m++];}
 
             // extract directory from sender by removing everything after @
             char receivername[20];
