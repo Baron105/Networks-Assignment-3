@@ -192,12 +192,12 @@ int main(int argc, char *argv[])
                 mailbox = fopen(mailboxpath, "r");
 
                 // lock the mailbox
-                if (flock(fileno(mailbox), LOCK_EX | LOCK_NB) == -1)
-                {
-                    perror("Error in locking the mailbox\n");
-                    close(new_sock);
-                    exit(1);
-                }
+                // if (flock(fileno(mailbox), LOCK_EX | LOCK_NB) == -1)
+                // {
+                //     perror("Error in locking the mailbox\n");
+                //     close(new_sock);
+                //     exit(1);
+                // }
 
                 // count the number of emails by tracking \r\n.\r\n
                 int emails = 0;
@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
 
 
                 }
-                else if(strncmp(buf,"RSET",4))
+                else if(strncmp(buf,"RSET",4)==0)
                 {
                     memset(mark,0,sizeof(mark));
                 }
@@ -440,12 +440,12 @@ int main(int argc, char *argv[])
                     }
 
                     // unlock file
-                    if (flock(fileno(mailbox), LOCK_UN) == -1)
-                    {
-                        perror("Error in unlocking the mailbox\n");
-                        close(new_sock);
-                        exit(1);
-                    }
+                    // if (flock(fileno(mailbox), LOCK_UN) == -1)
+                    // {
+                    //     perror("Error in unlocking the mailbox\n");
+                    //     close(new_sock);
+                    //     exit(1);
+                    // }
 
                     // close the mailbox
                     fclose(mailbox);
