@@ -310,6 +310,8 @@ int main(int argc, char *argv[])
             strcat(msg, ip_addr);
             strcat(msg, " closing connection\r\n");
 
+            fclose(fp);
+
             send(new_sock, msg, strlen(msg), 0);
 
             close(new_sock);
