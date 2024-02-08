@@ -259,63 +259,77 @@ int main(int argc, char *argv[])
 
                 else if (strncmp(buf, "LIST", 4) == 0)
                 {
+
+                    char list_msg[1000];
+                    strcpy(list_msg,buf);
                     
+                    fseek(mailbox, 0, SEEK_SET);
+                    int emails = 0;
+                    int chars = 0;
+
+                    int c = 1;
+                    int mail_char = 0 ;
+                    int char_count[1000] = {0};
+
+                    while(fgets(buf, sizeof(buf), mailbox))
+                    {
+                        if(mark[c]==0)
+                        {
+                            mail_char += strlen(buf);
+
+                        }
+                        if (strncmp(buf, ".\r\n", 3) == 0 && mark[c]==0)
+                        {
+                            char_count[c] = mail_char;
+                            mail_char = 0;
+                            emails++;
+                            chars+=char_count[c];
+                            c++;
+                        }
+                        else if(mark[c]==1 && strncmp(buf, ".\r\n", 3) == 0)
+                        {
+                            c++;
+                            mail_char=0;
+                        }
+                    }
 
 
+                    // check if list_msg has any additional parameters
+                    if(strlen(list_msg)==6)
+                    {
+                        char msg[200];
+                        snprintf(msg, sizeof(msg), "+OK %d messages (%d octets)\r\n", emails, chars/8);
+                        send(new_sock, msg, strlen(msg), 0);
+                        for(int i=1;i<=c;i++)
+                        {
+                            if(mark[i]==0)
+                            {
+                                char msg[200];
+                                snprintf(msg, sizeof(msg), "%d %d\r\n", i, char_count[i]/8);
+                                send(new_sock, msg, strlen(msg), 0);
+                            }
+                        }
+                        send(new_sock, ".\r\n", 3, 0);
+                    }
+                    else 
+                    {
+                        int mailno;
+                        sscanf(list_msg, "LIST %d", &mailno);
 
-
-
-
-                    // // extract the mails in the format
-                    // fseek(mailbox, 0, SEEK_SET);
-                    // s = 0;
-                    // char semail[100];
-                    // char rdatetime[100];
-                    // char subject[100];
-                    // int sc = 0, rc = 0, subc = 0;
-                    // while (fgets(buf, sizeof(buf), mailbox))
-                    // {
-                    //     if (strncmp(buf, ".\r\n", 3) == 0)
-                    //     {
-                    //         s++;
-                    //         sc = 0;
-                    //         rc = 0;
-                    //         subc = 0;
-                    //         // send all data together
-                    //         char msg[400];
-                    //         // snprintf(msg, sizeof(msg), "%d\t%s\t%s\t%s\r\n", s, semail, rdatetime, subject);
-                    //         snprintf(msg, sizeof(msg), "%-5d\t%-25s\t%-30s\t%-25s\r\n", s, semail, rdatetime, subject);
-
-                    //         // printf("%s", msg);
-                    //         send(new_sock, msg, strlen(msg), 0);
-                    //     }
-
-                    //     if (strncmp(buf, "From: ", 6) == 0 && sc == 0)
-                    //     {
-                    //         buf[strlen(buf) - 2] = '\0';
-                    //         strcpy(semail, buf + 6);
-                    //         sc = 1;
-                    //     }
-
-                    //     if (strncmp(buf, "Received: ", 10) == 0 && rc == 0)
-                    //     {
-                    //         buf[strlen(buf) - 2] = '\0';
-                    //         strcpy(rdatetime, buf + 10);
-                    //         rc = 1;
-                    //     }
-
-                    //     if (strncmp(buf, "Subject: ", 9) == 0 && subc == 0)
-                    //     {
-                    //         buf[strlen(buf) - 2] = '\0';
-                    //         strcpy(subject, buf + 9);
-                    //         subc = 1;
-                    //     }
-
-                    //     memset(buf, 0, sizeof(buf));
-                    // }
-                    // memset(buf, 0, sizeof(buf));
-                    // strcpy(buf, "#");
-                    // send(new_sock, buf, strlen(buf), 0);
+                        if(mailno > s || mailno < 1 || mark[mailno])
+                        {
+                            char invalid_msg[100];
+                            snprintf(invalid_msg, sizeof(invalid_msg), "-ERR no such message, only %d messages in maildrop\r\n.\r\n", mailno);
+                            send(new_sock, invalid_msg, strlen(invalid_msg), 0);
+                            continue;
+                        }
+                        else
+                        {
+                            char msg[200];
+                            snprintf(msg, sizeof(msg), "+OK %d %d\r\n", mailno, char_count[mailno]/8);
+                            send(new_sock, msg, strlen(msg), 0);
+                        }
+                    }
                 }
                 else if (strncmp(buf, "RETR", 4) == 0)
                 {
