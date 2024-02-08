@@ -139,9 +139,11 @@ int main(int argc, char *argv[])
 
             printf("%s\n", buf);
             char sender[100];
-            strcpy(sender, buf + 11);
-            // set last char to null
-            sender[strlen(sender) - 2] = '\0';
+            // iterate through buf to get the sender from buf
+            int m = 0;
+            int n = 0;
+            while(buf[m]!='<')m++;
+            while(buf[m]!='>'){sender[n++] = buf[m++];}
 
             // send 250 OK
             strcpy(msg, "250 ");
@@ -170,7 +172,11 @@ int main(int argc, char *argv[])
 
             printf("%s\n", buf);
             char receiver[100];
-            strcpy(receiver, buf + 9);
+            // iterate through buf to get the receiver from buf
+            m = 0;
+            n=0;
+            while(buf[m]!='<')m++;
+            while(buf[m]!='>'){receiver[n++] = buf[m++];}
 
             // extract directory from sender by removing everything after @
             char receivername[20];

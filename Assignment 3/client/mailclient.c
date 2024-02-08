@@ -143,37 +143,147 @@ int main(int argc, char *argv[])
                 exit(0);
             }
 
+            int mark[1000] = {0};
+
             printf("%s\n", buf);
 
             while (1)
             {
-                // send LIST
+
+                // send STAT to get number of mails 
                 memset(msg, 0, sizeof(msg));
                 // memset(buf, 0, sizeof(buf));
-                strcpy(msg, "LIST\r\n");
+                strcpy(msg, "STAT\r\n");
                 send(client_socket, msg, strlen(msg), 0);
+
+                // recv +OK
+                memset(buf, 0, sizeof(buf));
+                len = recv(client_socket, buf, sizeof(buf), 0);
+                buf[len - 2] = '\0';
+
+                if (strncmp(buf, "+OK", 3) != 0)
+                {
+                    printf("Error in connection\n");
+                    close(client_socket);
+                    exit(0);
+                }
 
                 // receive the list of mails character by character
                 printf("List of mails:\n");
                 printf("%-5s\t%-25s\t%-30s\t%-25s\n", "Sl.No", "From", "Received at", "Subject");
 
-                while (1)
-                {
-                    // keep receiving the list of mails till \r\n#
-                    memset(buf, 0, sizeof(buf));
-                    len = recv(client_socket, buf, sizeof(buf), 0);
+                //extract number of mails 
+                int nummails;
+                sscanf(buf, "+OK %d", &nummails);
 
-                    if (buf[len - 1] == '#')
+                for(int i=0;i<nummails;i++)
+                {
+                    if(!mark[i+1])
                     {
-                        buf[len - 1] = '\0';
-                        printf("%s\n", buf);
-                        break;
-                    }
-                    else
-                    {
-                        printf("%s", buf);
+                        // send RETR to get the mail
+                        memset(msg, 0, sizeof(msg));
+                        sprintf(msg, "RETR %d\r\n", i+1);
+                        send(client_socket, msg, strlen(msg), 0);
+
+                        // receive the mail
+                        memset(buf, 0, sizeof(buf));
+                        while(1)
+                        {
+                            // receive the message character by character
+                            char x[5] ;
+                            memset(x, 0, sizeof(x));
+                            recv(client_socket, x, 1, 0);
+                            strcat(buf, x);
+                            
+                            // breaking case 
+                            if(strlen(buf)>=5 && buf[strlen(buf)-5]=='\r' && buf[strlen(buf)-4]=='\n' && buf[strlen(buf)-3]=='.' && buf[strlen(buf)-2]=='\r' && buf[strlen(buf)-1]=='\n')
+                            {
+                                break;
+                            }
+
+
+                        }
+
+                        // get the sender and subject from the mail
+                        char from[100];
+                        char subject[100];
+                        char date[100];
+                        int f_flag = 0;
+                        int s_flag = 0;
+                        int d_flag = 0;
+
+                        for(int i=0;i<strlen(buf);i++)
+                        {
+
+                            if(buf[i]=='F' && buf[i+1]=='r' && buf[i+2]=='o' && buf[i+3]=='m' && buf[i+4]==':')
+                            {
+                                if(f_flag) continue;
+                                f_flag = 1;
+                                int j = i+5;
+                                while(buf[j]==' ')
+                                {
+                                    j++;
+                                }
+                                int k = 0;
+                                while(buf[j]!='\r' && buf[j]!=' ')
+                                {
+                                    from[k] = buf[j];
+                                    k++;
+                                    j++;
+                                }
+                                from[k] = '\0';
+                            }
+                            if(buf[i]=='S' && buf[i+1]=='u' && buf[i+2]=='b' && buf[i+3]=='j' && buf[i+4]=='e' && buf[i+5]=='c' && buf[i+6]=='t' && buf[i+7]==':')
+                            {
+                                if(s_flag) continue;
+                                s_flag = 1;
+                                int j = i+8;
+                                while(buf[j]==' ')
+                                {
+                                    j++;
+                                }
+                                int k = 0;
+                                while(buf[j]!='\r')
+                                {
+                                    subject[k] = buf[j];
+                                    k++;
+                                    j++;
+                                }
+                                subject[k] = '\0';
+                            }
+                            if(buf[i]=='R' && buf[i+1]=='e' && buf[i+2]=='c' && buf[i+3]=='e' && buf[i+4]=='i' && buf[i+5]=='v' && buf[i+6]=='e' && buf[i+7]=='d' && buf[i+8]==':' )
+                            {
+                                if(d_flag) continue;
+                                d_flag = 1;
+                                int j = i+9;
+                                while(buf[j]==' ')
+                                {
+                                    j++;
+                                }
+                                int k = 0;
+                                while(buf[j]!='\r')
+                                {
+                                    date[k] = buf[j];
+                                    k++;
+                                    j++;
+                                }
+                                date[k] = '\0';
+                            }
+                        }
+
+                        // print the mail details
+                        printf("%-5d\t%-25s\t%-30s\t%-25s\n", i+1, from, date, subject);
+
                     }
                 }
+
+
+
+
+
+
+
+                
                 int flag = 0;
                 int flag2 = 0;
                 while (1)
@@ -196,29 +306,56 @@ int main(int argc, char *argv[])
 
                     // receive the mail
                     flag2 = 0;
+                    memset(buf, 0, sizeof(buf));
                     while (1)
                     {
-                        memset(buf, 0, sizeof(buf));
-                        len = recv(client_socket, buf, sizeof(buf), 0);
-                        if (strncmp(buf, "-ERR", 4) == 0)
+
+                        char x[5] ;
+                        memset(x, 0, sizeof(x));
+                        recv(client_socket, x, 1, 0);
+                        strcat(buf, x);
+                        
+                        // breaking case 
+                        if(strlen(buf)>=5 && buf[strlen(buf)-5]=='\r' && buf[strlen(buf)-4]=='\n' && buf[strlen(buf)-3]=='.' && buf[strlen(buf)-2]=='\r' && buf[strlen(buf)-1]=='\n')
                         {
-                            printf("Error in mail number\n");
-                            break;
-                        }
-                        if (buf[len - 1] == '#')
-                        {
-                            buf[len - 1] = '\0';
-                            printf("%s\n", buf);
                             flag2 = 1;
+                            buf[strlen(buf)-1]='\0';
+                            printf("%s\n", buf);
+                            if(strlen(buf)>5 && buf[0]=='-' && buf[1]=='E' && buf[2]=='R' && buf[3]=='R')
+                            {
+                                printf("Error in mail number\n");
+                                flag2=0;
+                                break;
+                            }
                             break;
                         }
-                        else
-                        {
-                            printf("%s", buf);
-                        }
+                        
+
+                        
                     }
+
                     if (flag2 == 1)
+                    {
+                        char d;
+                        scanf("\n%c",&d);
+                        if(d=='d')
+                        {
+                            // send DELE to delete the mail
+                            memset(msg, 0, sizeof(msg));
+                            sprintf(msg, "DELE %d\r\n", mailno);
+                            send(client_socket, msg, strlen(msg), 0);
+
+                            // recv +OK
+                            memset(buf, 0, sizeof(buf));
+                            len = recv(client_socket, buf, sizeof(buf), 0);
+                            buf[len - 2] = '\0';
+
+                            printf("%s\n", buf);
+                            mark[mailno] = 1;
+                        }
+
                         break;
+                    }
                 }
                 if(flag==1)
                 {
@@ -318,9 +455,9 @@ int main(int argc, char *argv[])
 
             // send MAIL FROM
             memset(msg, 0, sizeof(msg));
-            strcpy(msg, "MAIL FROM: ");
+            strcpy(msg, "MAIL FROM: <");
             strcat(msg, sender);
-            strcat(msg, "\r\n");
+            strcat(msg, ">\r\n");
 
             send(client_socket, msg, strlen(msg), 0);
 
@@ -345,9 +482,9 @@ int main(int argc, char *argv[])
 
             // send RCPT TO
             memset(msg, 0, sizeof(msg));
-            strcpy(msg, "RCPT TO: ");
+            strcpy(msg, "RCPT TO: <");
             strcat(msg, receiver);
-            strcat(msg, "\r\n");
+            strcat(msg, ">\r\n");
 
             send(client_socket, msg, strlen(msg), 0);
 
