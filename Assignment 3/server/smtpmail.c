@@ -144,6 +144,8 @@ int main(int argc, char *argv[])
             int n = 0;
             while(buf[m]!='<')m++;
             while(buf[m]!='>'){sender[n++] = buf[m++];}
+            sender[n++]='>';
+            sender[n] = '\0';
 
             // send 250 OK
             strcpy(msg, "250 ");
@@ -176,7 +178,10 @@ int main(int argc, char *argv[])
             m = 0;
             n=0;
             while(buf[m]!='<')m++;
+            m++;
             while(buf[m]!='@'){receiver[n++] = buf[m++];}
+
+            receiver[n] = '\0';
 
             char path[42];
 
