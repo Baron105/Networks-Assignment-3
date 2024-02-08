@@ -178,20 +178,9 @@ int main(int argc, char *argv[])
             while(buf[m]!='<')m++;
             while(buf[m]!='@'){receiver[n++] = buf[m++];}
 
-            // extract directory from sender by removing everything after @
-            char receivername[20];
             char path[42];
-            for (int i = 0; i < strlen(receiver); i++)
-            {
-                if (receiver[i] == '@')
-                {
-                    receivername[i] = '\0';
-                    break;
-                }
-                receivername[i] = receiver[i];
-            }
 
-            snprintf(path, sizeof(path), "%s/mailbox", receivername);
+            snprintf(path, sizeof(path), "%s/mailbox", receiver);
 
             memset(msg, 0, sizeof(msg));
 
