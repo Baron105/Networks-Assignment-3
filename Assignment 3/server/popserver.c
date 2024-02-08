@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
             strcpy(pass, buf + i);
             FILE *mailbox;
 
-            int mark[1000]={0};
+            int mark[1000] = {0};
             char mailboxpath[200];
 
             if (strcmp(pass, password) == 0)
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
                 len = recv(new_sock, buf, sizeof(buf), 0);
                 printf("%s", buf);
 
-                if(strncmp(buf,"STAT",4)==0)
+                if (strncmp(buf, "STAT", 4) == 0)
                 {
                     // count the number of emails by tracking \r\n.\r\n
                     int emails = 0;
@@ -254,69 +254,67 @@ int main(int argc, char *argv[])
                     char msg[200];
                     snprintf(msg, sizeof(msg), "+OK %d %d\r\n", emails, octets);
                     send(new_sock, msg, strlen(msg), 0);
-                    s=emails;
+                    s = emails;
                 }
 
                 else if (strncmp(buf, "LIST", 4) == 0)
                 {
 
                     char list_msg[1000];
-                    strcpy(list_msg,buf);
-                    
+                    strcpy(list_msg, buf);
+
                     fseek(mailbox, 0, SEEK_SET);
                     int emails = 0;
                     int chars = 0;
 
                     int c = 1;
-                    int mail_char = 0 ;
+                    int mail_char = 0;
                     int char_count[1000] = {0};
 
-                    while(fgets(buf, sizeof(buf), mailbox))
+                    while (fgets(buf, sizeof(buf), mailbox))
                     {
-                        if(mark[c]==0)
+                        if (mark[c] == 0)
                         {
                             mail_char += strlen(buf);
-
                         }
-                        if (strncmp(buf, ".\r\n", 3) == 0 && mark[c]==0)
+                        if (strncmp(buf, ".\r\n", 3) == 0 && mark[c] == 0)
                         {
                             char_count[c] = mail_char;
                             mail_char = 0;
                             emails++;
-                            chars+=char_count[c];
+                            chars += char_count[c];
                             c++;
                         }
-                        else if(mark[c]==1 && strncmp(buf, ".\r\n", 3) == 0)
+                        else if (mark[c] == 1 && strncmp(buf, ".\r\n", 3) == 0)
                         {
                             c++;
-                            mail_char=0;
+                            mail_char = 0;
                         }
                     }
 
-
                     // check if list_msg has any additional parameters
-                    if(strlen(list_msg)==6)
+                    if (strlen(list_msg) == 6)
                     {
                         char msg[200];
-                        snprintf(msg, sizeof(msg), "+OK %d messages (%d octets)\r\n", emails, chars/8);
+                        snprintf(msg, sizeof(msg), "+OK %d messages (%d octets)\r\n", emails, chars / 8);
                         send(new_sock, msg, strlen(msg), 0);
-                        for(int i=1;i<=c;i++)
+                        for (int i = 1; i <= c; i++)
                         {
-                            if(mark[i]==0)
+                            if (mark[i] == 0)
                             {
                                 char msg[200];
-                                snprintf(msg, sizeof(msg), "%d %d\r\n", i, char_count[i]/8);
+                                snprintf(msg, sizeof(msg), "%d %d\r\n", i, char_count[i] / 8);
                                 send(new_sock, msg, strlen(msg), 0);
                             }
                         }
                         send(new_sock, ".\r\n", 3, 0);
                     }
-                    else 
+                    else
                     {
                         int mailno;
                         sscanf(list_msg, "LIST %d", &mailno);
 
-                        if(mailno > s || mailno < 1 || mark[mailno])
+                        if (mailno > s || mailno < 1 || mark[mailno])
                         {
                             char invalid_msg[100];
                             snprintf(invalid_msg, sizeof(invalid_msg), "-ERR no such message, only %d messages in maildrop\r\n.\r\n", mailno);
@@ -326,7 +324,7 @@ int main(int argc, char *argv[])
                         else
                         {
                             char msg[200];
-                            snprintf(msg, sizeof(msg), "+OK %d %d\r\n", mailno, char_count[mailno]/8);
+                            snprintf(msg, sizeof(msg), "+OK %d %d\r\n", mailno, char_count[mailno] / 8);
                             send(new_sock, msg, strlen(msg), 0);
                         }
                     }
@@ -348,11 +346,11 @@ int main(int argc, char *argv[])
                             flag = 1;
                             break;
                         }
-                        else if(mark[mailno])
+                        else if (mark[mailno])
                         {
-                            char * invalid_msg = "-ERR message %d already deleted\r\n.\r\n";
+                            char *invalid_msg = "-ERR message %d already deleted\r\n.\r\n";
                             send(new_sock, invalid_msg, strlen(invalid_msg), 0);
-                            flag = 1;   
+                            flag = 1;
                             break;
                         }
                         else
@@ -390,7 +388,7 @@ int main(int argc, char *argv[])
                     memset(buf, 0, sizeof(buf));
                 }
 
-                else if(strncmp(buf,"DELE",4)==0)
+                else if (strncmp(buf, "DELE", 4) == 0)
                 {
                     // get the mailno
                     int mailno;
@@ -399,27 +397,24 @@ int main(int argc, char *argv[])
 
                     sscanf(buf, "DELE %d", &mailno);
 
-                    if(mark[mailno])
+                    if (mark[mailno])
                     {
                         snprintf(msg, sizeof(msg), "-ERR message %d already deleted\r\n", mailno);
                         send(new_sock, msg, strlen(msg), 0);
                         continue;
-
                     }
-                    
-                    mark[mailno] = 1 ;
+
+                    mark[mailno] = 1;
                     snprintf(msg, sizeof(msg), "+OK message %d deleted\r\n", mailno);
 
                     send(new_sock, msg, strlen(msg), 0);
-
-
                 }
-                else if(strncmp(buf,"RSET",4)==0)
+                else if (strncmp(buf, "RSET", 4) == 0)
                 {
-                    memset(mark,0,sizeof(mark));
+                    memset(mark, 0, sizeof(mark));
                 }
 
-                else if(strncmp(buf,"QUIT",4)==0)
+                else if (strncmp(buf, "QUIT", 4) == 0)
                 {
                     char *quit_msg = "+OK POP3 server signing off\r\n";
                     send(new_sock, quit_msg, strlen(quit_msg), 0);
@@ -453,19 +448,13 @@ int main(int argc, char *argv[])
                     // delete mailbox file
                     remove(mailboxpath);
 
-                    //rename temp to mailbox
+                    // rename temp to mailbox
                     rename("temp", mailboxpath);
-                    
 
                     close(new_sock);
                     break;
                 }
-
-
-
             }
-
-            
 
             close(new_sock);
             printf("Connection closed\n");

@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
             while (1)
             {
 
-                // send STAT to get number of mails 
+                // send STAT to get number of mails
                 memset(msg, 0, sizeof(msg));
                 // memset(buf, 0, sizeof(buf));
                 strcpy(msg, "STAT\r\n");
@@ -172,36 +172,34 @@ int main(int argc, char *argv[])
                 printf("List of mails:\n");
                 printf("%-5s\t%-25s\t%-30s\t%-25s\n", "Sl.No", "From", "Received at", "Subject");
 
-                //extract number of mails 
+                // extract number of mails
                 int nummails;
                 sscanf(buf, "+OK %d", &nummails);
 
-                for(int i=0;i<nummails;i++)
+                for (int i = 0; i < nummails; i++)
                 {
-                    if(!mark[i+1])
+                    if (!mark[i + 1])
                     {
                         // send RETR to get the mail
                         memset(msg, 0, sizeof(msg));
-                        sprintf(msg, "RETR %d\r\n", i+1);
+                        sprintf(msg, "RETR %d\r\n", i + 1);
                         send(client_socket, msg, strlen(msg), 0);
 
                         // receive the mail
                         memset(buf, 0, sizeof(buf));
-                        while(1)
+                        while (1)
                         {
                             // receive the message character by character
-                            char x[5] ;
+                            char x[5];
                             memset(x, 0, sizeof(x));
                             recv(client_socket, x, 1, 0);
                             strcat(buf, x);
-                            
-                            // breaking case 
-                            if(strlen(buf)>=5 && buf[strlen(buf)-5]=='\r' && buf[strlen(buf)-4]=='\n' && buf[strlen(buf)-3]=='.' && buf[strlen(buf)-2]=='\r' && buf[strlen(buf)-1]=='\n')
+
+                            // breaking case
+                            if (strlen(buf) >= 5 && buf[strlen(buf) - 5] == '\r' && buf[strlen(buf) - 4] == '\n' && buf[strlen(buf) - 3] == '.' && buf[strlen(buf) - 2] == '\r' && buf[strlen(buf) - 1] == '\n')
                             {
                                 break;
                             }
-
-
                         }
 
                         // get the sender and subject from the mail
@@ -212,20 +210,21 @@ int main(int argc, char *argv[])
                         int s_flag = 0;
                         int d_flag = 0;
 
-                        for(int i=0;i<strlen(buf);i++)
+                        for (int i = 0; i < strlen(buf); i++)
                         {
 
-                            if(buf[i]=='F' && buf[i+1]=='r' && buf[i+2]=='o' && buf[i+3]=='m' && buf[i+4]==':')
+                            if (buf[i] == 'F' && buf[i + 1] == 'r' && buf[i + 2] == 'o' && buf[i + 3] == 'm' && buf[i + 4] == ':')
                             {
-                                if(f_flag) continue;
+                                if (f_flag)
+                                    continue;
                                 f_flag = 1;
-                                int j = i+5;
-                                while(buf[j]==' ')
+                                int j = i + 5;
+                                while (buf[j] == ' ')
                                 {
                                     j++;
                                 }
                                 int k = 0;
-                                while(buf[j]!='\r' && buf[j]!=' ')
+                                while (buf[j] != '\r' && buf[j] != ' ')
                                 {
                                     from[k] = buf[j];
                                     k++;
@@ -233,17 +232,18 @@ int main(int argc, char *argv[])
                                 }
                                 from[k] = '\0';
                             }
-                            if(buf[i]=='S' && buf[i+1]=='u' && buf[i+2]=='b' && buf[i+3]=='j' && buf[i+4]=='e' && buf[i+5]=='c' && buf[i+6]=='t' && buf[i+7]==':')
+                            if (buf[i] == 'S' && buf[i + 1] == 'u' && buf[i + 2] == 'b' && buf[i + 3] == 'j' && buf[i + 4] == 'e' && buf[i + 5] == 'c' && buf[i + 6] == 't' && buf[i + 7] == ':')
                             {
-                                if(s_flag) continue;
+                                if (s_flag)
+                                    continue;
                                 s_flag = 1;
-                                int j = i+8;
-                                while(buf[j]==' ')
+                                int j = i + 8;
+                                while (buf[j] == ' ')
                                 {
                                     j++;
                                 }
                                 int k = 0;
-                                while(buf[j]!='\r')
+                                while (buf[j] != '\r')
                                 {
                                     subject[k] = buf[j];
                                     k++;
@@ -251,17 +251,18 @@ int main(int argc, char *argv[])
                                 }
                                 subject[k] = '\0';
                             }
-                            if(buf[i]=='R' && buf[i+1]=='e' && buf[i+2]=='c' && buf[i+3]=='e' && buf[i+4]=='i' && buf[i+5]=='v' && buf[i+6]=='e' && buf[i+7]=='d' && buf[i+8]==':' )
+                            if (buf[i] == 'R' && buf[i + 1] == 'e' && buf[i + 2] == 'c' && buf[i + 3] == 'e' && buf[i + 4] == 'i' && buf[i + 5] == 'v' && buf[i + 6] == 'e' && buf[i + 7] == 'd' && buf[i + 8] == ':')
                             {
-                                if(d_flag) continue;
+                                if (d_flag)
+                                    continue;
                                 d_flag = 1;
-                                int j = i+9;
-                                while(buf[j]==' ')
+                                int j = i + 9;
+                                while (buf[j] == ' ')
                                 {
                                     j++;
                                 }
                                 int k = 0;
-                                while(buf[j]!='\r')
+                                while (buf[j] != '\r')
                                 {
                                     date[k] = buf[j];
                                     k++;
@@ -272,18 +273,10 @@ int main(int argc, char *argv[])
                         }
 
                         // print the mail details
-                        printf("%-5d\t%-25s\t%-30s\t%-25s\n", i+1, from, date, subject);
-
+                        printf("%-5d\t%-25s\t%-30s\t%-25s\n", i + 1, from, date, subject);
                     }
                 }
 
-
-
-
-
-
-
-                
                 int flag = 0;
                 int flag2 = 0;
                 while (1)
@@ -310,35 +303,32 @@ int main(int argc, char *argv[])
                     while (1)
                     {
 
-                        char x[5] ;
+                        char x[5];
                         memset(x, 0, sizeof(x));
                         recv(client_socket, x, 1, 0);
                         strcat(buf, x);
-                        
-                        // breaking case 
-                        if(strlen(buf)>=5 && buf[strlen(buf)-5]=='\r' && buf[strlen(buf)-4]=='\n' && buf[strlen(buf)-3]=='.' && buf[strlen(buf)-2]=='\r' && buf[strlen(buf)-1]=='\n')
+
+                        // breaking case
+                        if (strlen(buf) >= 5 && buf[strlen(buf) - 5] == '\r' && buf[strlen(buf) - 4] == '\n' && buf[strlen(buf) - 3] == '.' && buf[strlen(buf) - 2] == '\r' && buf[strlen(buf) - 1] == '\n')
                         {
                             flag2 = 1;
-                            buf[strlen(buf)-1]='\0';
+                            buf[strlen(buf) - 1] = '\0';
                             printf("%s\n", buf);
-                            if(strlen(buf)>5 && buf[0]=='-' && buf[1]=='E' && buf[2]=='R' && buf[3]=='R')
+                            if (strlen(buf) > 5 && buf[0] == '-' && buf[1] == 'E' && buf[2] == 'R' && buf[3] == 'R')
                             {
                                 printf("Error in mail number\n");
-                                flag2=0;
+                                flag2 = 0;
                                 break;
                             }
                             break;
                         }
-                        
-
-                        
                     }
 
                     if (flag2 == 1)
                     {
                         char d;
-                        scanf("\n%c",&d);
-                        if(d=='d')
+                        scanf("\n%c", &d);
+                        if (d == 'd')
                         {
                             // send DELE to delete the mail
                             memset(msg, 0, sizeof(msg));
@@ -357,7 +347,7 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
-                if(flag==1)
+                if (flag == 1)
                 {
                     // send QUIT
                     memset(msg, 0, sizeof(msg));
@@ -368,7 +358,7 @@ int main(int argc, char *argv[])
                     // recv OK
                     memset(buf, 0, sizeof(buf));
                     len = recv(client_socket, buf, sizeof(buf), 0);
-                    buf[len-2]='\0';
+                    buf[len - 2] = '\0';
 
                     if (strncmp(buf, "+OK", 3) != 0)
                     {
@@ -381,7 +371,7 @@ int main(int argc, char *argv[])
 
                     break;
                 }
-                
+
                 if (flag == 1)
                     break;
             }

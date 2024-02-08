@@ -142,9 +142,13 @@ int main(int argc, char *argv[])
             // iterate through buf to get the sender from buf
             int m = 0;
             int n = 0;
-            while(buf[m]!='<')m++;
-            while(buf[m]!='>'){sender[n++] = buf[m++];}
-            sender[n++]='>';
+            while (buf[m] != '<')
+                m++;
+            while (buf[m] != '>')
+            {
+                sender[n++] = buf[m++];
+            }
+            sender[n++] = '>';
             sender[n] = '\0';
 
             // send 250 OK
@@ -176,10 +180,14 @@ int main(int argc, char *argv[])
             char receiver[100];
             // iterate through buf to get the receiver from buf
             m = 0;
-            n=0;
-            while(buf[m]!='<')m++;
+            n = 0;
+            while (buf[m] != '<')
+                m++;
             m++;
-            while(buf[m]!='@'){receiver[n++] = buf[m++];}
+            while (buf[m] != '@')
+            {
+                receiver[n++] = buf[m++];
+            }
 
             receiver[n] = '\0';
 
