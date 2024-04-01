@@ -1,2 +1,3 @@
 # Networks-Assignment-3
-Assignment 3 Networks
+
+Using SMTP and POP3 to build a simple mail server system allowing the clients to send and receive mails.
